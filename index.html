@@ -195,6 +195,7 @@
   .reconnect a { color: var(--accent); }
   .reconnect input { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin: 4px 0 10px; }
   .morebox { padding: 4px 2px 16px; }
+  .tokenbox { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin: 4px 0 10px; }
 
   /* GPA */
   .gpatop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
@@ -333,6 +334,12 @@
           <h2>Напоминания в Telegram</h2>
           <div id="tg"></div>
         </div>
+        <div class="card" data-sec="more">
+          <h2>Маркер Canvas</h2>
+          <p class="sub">Маркер хранится в твоём Google-аккаунте и общий для компа и телефона: вставил на одном — работает везде. Если пересоздал маркер в Canvas, вставь новый сюда.</p>
+          <input id="token3" class="tokenbox" type="password" placeholder="Новый маркер доступа" autocomplete="off">
+          <div class="actions"><button id="save3">Заменить маркер</button></div>
+        </div>
         <div data-sec="more" class="morebox">
           <p class="sub" id="moreInfo"></p>
           <button id="forget" class="link">Отключить Canvas на этом аккаунте</button>
@@ -362,6 +369,15 @@ let settings = { skip: {}, exam: {}, goal: {}, manual: {}, credits: {}, final: {
 // call() сам выбирает, куда обращаться.
 const GAS = typeof google !== 'undefined' && google.script && google.script.run;
 const OFFLINE = GAS ? 'Не получилось загрузить. Попробуй обновить.' : 'Сервер не отвечает. Запусти «Запустить.command» заново.';
+// Показываем настоящий текст ошибки — по общей фразе причину не найти.
+function errText(err) {
+  const msg = String((err && (err.message || err)) || '').trim();
+  const tail = msg ? ` (ошибка: ${msg})` : '';
+  if (GAS && /authori|permission|access denied|scripterror|server error/i.test(msg)) {
+    return 'Google не пропустил запрос. Чаще всего так бывает, когда в браузере открыто несколько Google-аккаунтов: страница открылась под учебным, а запрос ушёл от другого. Открой сайт в окне инкогнито или в профиле Chrome, где вошёл только учебный аккаунт.' + tail;
+  }
+  return OFFLINE + tail;
+}
 function call(name, arg) {
   if (GAS) {
     return new Promise((resolve, reject) => {
@@ -1128,8 +1144,9 @@ function show(body, fromCache) {
 }
 
 let loading = false;
+let reloadAfter = false; // загрузку попросили, пока шла другая — сделаем её сразу после
 async function load() {
-  if (loading) return;
+  if (loading) { reloadAfter = true; return; }
   loading = true;
   $('refresh').disabled = true;
   if (data) $('sub').textContent = 'Обновляю…';
@@ -1163,13 +1180,14 @@ async function load() {
     notice(demo ? 'Это пример с выдуманными данными. Обнови страницу, чтобы вернуться к подключению.' : '');
     if (!demo) writeCache(body);
     show(body, false);
-  } catch {
+  } catch (err) {
     $('loading').hidden = true;
     if (data) $('sub').textContent = (data.name ? data.name + ' · ' : '') + 'данные от ' + fmtTime(data.updated);
-    notice(OFFLINE, true);
+    notice(errText(err), true);
   } finally {
     loading = false;
     $('refresh').disabled = false;
+    if (reloadAfter) { reloadAfter = false; load(); }
   }
 }
 
@@ -1225,18 +1243,23 @@ async function connect(input, button) {
   try {
     const body = await call('saveToken', token);
     input.value = '';
-    if (body.ok) await load();
-    else notice(body.badToken ? `Canvas не принял этот маркер${body.why ? ' (ответ Canvas: ' + body.why + ')' : ''}. В нём ${token.length} символов — обычно их 64. Скопируй маркер целиком из окна, которое Canvas показывает сразу после создания.` : 'Не получилось связаться с Canvas. Проверь интернет.', true);
-  } catch {
-    notice(OFFLINE, true);
+    if (body.ok) {
+      $('reconnect').hidden = true;
+      notice('Маркер сохранён, загружаю данные…');
+      await load();
+    } else notice(body.badToken ? `Canvas не принял этот маркер${body.why ? ' (ответ Canvas: ' + body.why + ')' : ''}. В нём ${token.length} символов — обычно их 64. Скопируй маркер целиком из окна, которое Canvas показывает сразу после создания.` : 'Не получилось связаться с Canvas. Проверь интернет.', true);
+  } catch (err) {
+    notice(errText(err), true);
   } finally {
     button.disabled = false;
   }
 }
 $('save').onclick = () => connect($('token'), $('save'));
 $('save2').onclick = () => connect($('token2'), $('save2'));
+$('save3').onclick = () => connect($('token3'), $('save3'));
 $('token').onkeydown = (e) => { if (e.key === 'Enter') $('save').click(); };
 $('token2').onkeydown = (e) => { if (e.key === 'Enter') $('save2').click(); };
+$('token3').onkeydown = (e) => { if (e.key === 'Enter') $('save3').click(); };
 $('forget').onclick = async () => {
   if (!confirm('Удалить сохранённый маркер Canvas? Напоминания в Telegram тоже отключатся.')) return;
   await call('forgetToken');
