@@ -1,0 +1,11 @@
+# Секреты — никогда не заливать
+canvas-token.txt
+local-props.json
+
+# Настройки Claude Code на этом компе
+.claude/
+
+# Мусор macOS и инструментов
+.DS_Store
+node_modules/
+*.log

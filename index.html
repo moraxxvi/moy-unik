@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мой уник</title>
+<style>
+  :root {
+    --bg: #f3f2ee; --card: #ffffff; --card2: #f7f6f3; --text: #17181c; --muted: #6b6d76; --line: #e4e2db;
+    --accent: #4f5fe8; --red: #d6402f; --orange: #c46a00; --green: #1f8a4c;
+    --red-bg: #fde9e6; --orange-bg: #fcefd9; --green-bg: #e2f3e8;
+    --hero-a: #4353e0; --hero-b: #8a4fe0; --shadow: 0 1px 2px rgba(20, 20, 40, .05), 0 8px 24px rgba(20, 20, 40, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0f13; --card: #17191f; --card2: #1e2028; --text: #f1f1f4; --muted: #9496a1; --line: #272a33;
+      --accent: #8b97ff; --red: #ff7b6b; --orange: #f2a647; --green: #5fd08a;
+      --red-bg: #3a1d1a; --orange-bg: #37280f; --green-bg: #15321f;
+      --hero-a: #3442c4; --hero-b: #7440c9; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 56px; }
+  [hidden] { display: none !important; }
+
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .logo {
+    width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 18px;
+    background: linear-gradient(135deg, var(--hero-a), var(--hero-b));
+  }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.02em; line-height: 1.15; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .spacer { flex: 1; }
+  button, .btn {
+    font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+    border-radius: 10px; padding: 8px 14px; cursor: pointer; text-decoration: none; transition: border-color .15s, transform .05s;
+  }
+  button:hover, .btn:hover { border-color: var(--accent); }
+  button:active { transform: scale(.98); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark) { button.primary { color: #10111a; } }
+  button:disabled { opacity: .5; cursor: default; }
+  button.link { border: 0; background: none; color: var(--muted); padding: 4px 0; font-size: 13px; }
+
+  /* Главный блок: ближайший дедлайн */
+  .hero {
+    border-radius: 20px; padding: 22px; margin-bottom: 16px; color: #fff; display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap;
+    background: linear-gradient(120deg, var(--hero-a), var(--hero-b)); box-shadow: var(--shadow);
+  }
+  .hero a { color: inherit; text-decoration: none; }
+  .hero-main { flex: 1 1 320px; min-width: 0; }
+  .hero-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; opacity: .75; }
+  .hero-count { font-size: 44px; font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; margin: 6px 0 8px; }
+  .hero-title { font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
+  .hero-meta { opacity: .8; font-size: 14px; margin-top: 2px; }
+  .stats { display: flex; gap: 10px; flex: 0 1 auto; align-items: stretch; align-self: center; }
+  .stat { background: rgba(255, 255, 255, .14); border-radius: 14px; padding: 12px 16px; min-width: 92px; display: flex; flex-direction: column; justify-content: center; }
+  .stat b { font-size: 26px; line-height: 1.1; }
+  .stat span { font-size: 12px; opacity: .8; }
+  .stat.alert { background: rgba(255, 120, 100, .35); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  h2 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+  h2 label { margin-left: auto; font-weight: 400; font-size: 13px; color: var(--muted); cursor: pointer; display: flex; gap: 6px; align-items: center; }
+
+  /* Фильтр по предметам */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 11px; border-radius: 99px; white-space: nowrap;
+    background: var(--card2); border: 1px solid transparent; color: var(--text);
+  }
+  .chip.on { border-color: var(--accent); background: var(--card); font-weight: 600; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted)); flex: none; }
+
+  .group { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 6px; }
+  .group:first-child { margin-top: 0; }
+  .group.red { color: var(--red); }
+  .group.orange { color: var(--orange); }
+  a.row {
+    display: flex; gap: 12px; align-items: center; padding: 10px 10px 10px 14px; margin-bottom: 6px; border-radius: 12px;
+    color: inherit; text-decoration: none; background: var(--card2); position: relative; transition: transform .1s;
+  }
+  a.row::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px; border-radius: 4px; background: var(--c, var(--muted)); }
+  a.row:hover { transform: translateX(2px); }
+  a.row:hover .title { color: var(--accent); }
+  .main { flex: 1; min-width: 0; }
+  .title { font-weight: 600; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .when { text-align: right; white-space: nowrap; }
+  .when b { display: block; font-size: 14px; }
+  .when small { color: var(--muted); font-size: 12px; }
+  .when.soon b { color: var(--orange); }
+  .when.late b { color: var(--red); }
+  .done { opacity: .55; }
+  .done .title { text-decoration: line-through; font-weight: 500; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 99px; margin-left: 6px; vertical-align: 1px; }
+  .pill.green { background: var(--green-bg); color: var(--green); }
+  .pill.red { background: var(--red-bg); color: var(--red); }
+  .pill.orange { background: var(--orange-bg); color: var(--orange); }
+  a.news .title { font-weight: 500; }
+
+  /* Оценки */
+  a.grade { display: block; padding: 9px 0; color: inherit; text-decoration: none; border-top: 1px solid var(--line); }
+  a.grade:first-child, .group + a.grade { border-top: 0; }
+  a.grade:hover .gname { color: var(--accent); }
+  .gtop { display: flex; gap: 10px; align-items: baseline; }
+  .gname { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+  .gscore { font-size: 17px; font-weight: 700; white-space: nowrap; }
+  .gscore small { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 4px; }
+  .bar { height: 5px; border-radius: 5px; background: var(--card2); margin-top: 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 5px; background: var(--c, var(--accent)); }
+  details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  details .group { margin-top: 14px; }
+
+  /* Предмет: раскрывается по клику */
+  details.course { margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  details.course:first-child, .group + details.course { border-top: 0; }
+  details.course > summary { list-style: none; padding: 9px 0; color: inherit; font-size: inherit; }
+  details.course > summary::-webkit-details-marker { display: none; }
+  details.course > summary:hover .gname { color: var(--accent); }
+  .gname::before { content: "›"; display: inline-block; width: 14px; color: var(--muted); transition: transform .15s; }
+  details.course[open] .gname::before { transform: rotate(90deg); }
+  .inside { padding: 4px 0 14px; }
+  .info { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .info a { color: var(--accent); text-decoration: none; }
+  .calc { background: var(--card2); border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .calc-title { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .calc-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .calc label { font-size: 12px; color: var(--muted); display: block; }
+  .calc input {
+    width: 100%; font: inherit; font-size: 16px; font-weight: 600; padding: 7px 9px; margin-top: 3px; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+  }
+  .hints { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .hint { font-size: 12px; padding: 4px 9px; border-radius: 99px; background: var(--card); }
+  .calc-out { margin-top: 10px; font-size: 14px; }
+  .calc-out b { font-size: 20px; }
+  .goal { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+  .goal input { width: 70px; margin: 0; font-size: 14px; padding: 4px 8px; }
+  a.work { display: flex; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); color: inherit; text-decoration: none; font-size: 14px; }
+  a.work:hover .wname { color: var(--accent); }
+  .wname { overflow-wrap: anywhere; }
+  .wscore { white-space: nowrap; font-weight: 600; text-align: right; }
+  .wscore.none { color: var(--muted); font-weight: 400; }
+  .comment { margin-top: 4px; padding: 6px 9px; border-radius: 9px; background: var(--card2); font-size: 13px; }
+  details.sub { border: 0; margin: 6px 0 0; padding: 0; }
+  .wgroup { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 2px; }
+
+  .tg ol { padding-left: 20px; margin: 0 0 10px; font-size: 14px; }
+  .tg li { margin-bottom: 4px; }
+  .tg input {
+    width: 100%; font: inherit; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); margin-bottom: 10px;
+  }
+  .tg p { margin: 0 0 10px; font-size: 14px; }
+  .tg .msg { color: var(--red); font-size: 13px; margin-top: 8px; }
+
+  .line { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .line b { color: var(--text); }
+  .bad, .line b.bad { color: var(--red); }
+  .pill.blue { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); margin-left: 0; }
+  .gain { margin-top: 4px; }
+  .skip { font-size: 11px; padding: 2px 8px; border-radius: 99px; color: var(--muted); background: transparent; margin-top: 4px; }
+  .when .skip { display: block; margin-left: auto; }
+  .wright { text-align: right; white-space: nowrap; }
+  .hiddenNote { margin-top: 10px; }
+  .crow { display: grid; grid-template-columns: 62px 54px 76px; gap: 2px 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+  .crow:first-of-type { border-top: 0; }
+  .clabel { font-size: 13px; color: var(--muted); }
+  .cval { font-size: 18px; font-weight: 700; }
+  .crow input { margin: 0; font-size: 14px; font-weight: 500; padding: 5px 8px; }
+  .cnote { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+  .calc select { font: inherit; font-size: 13px; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); max-width: 60%; }
+  #risks { font-size: 13px; }
+
+  /* Меню */
+  .menu {
+    position: sticky; top: 0; z-index: 5; display: flex; gap: 6px; padding: 8px 0 10px; margin: -8px 0 8px;
+    background: var(--bg);
+  }
+  .menu button { border-radius: 99px; padding: 6px 14px; font-size: 14px; background: var(--card); }
+  .menu button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark) { .menu button.on { color: #10111a; } }
+  .tab-off { display: none !important; }
+  .reconnect { border-color: var(--red); }
+  .reconnect p { margin: 0 0 8px; }
+  .reconnect a { color: var(--accent); }
+  .reconnect input { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin: 4px 0 10px; }
+  .morebox { padding: 4px 2px 16px; }
+
+  /* GPA */
+  .gpatop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+  .gpatop > div { background: var(--card2); border-radius: 12px; padding: 10px 12px; }
+  .gpatop b { font-size: 26px; }
+  .gpablock { margin-top: 10px; }
+  .gpablock > summary { font-weight: 600; color: var(--text); font-size: 14px; }
+  .gparow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .gparow.off { opacity: .5; }
+  .gpaname { font-weight: 500; overflow-wrap: anywhere; }
+  .gpaletter { font-size: 18px; font-weight: 700; text-align: right; white-space: nowrap; }
+  .gpaletter small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .gpactl { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .gpactl label { display: flex; align-items: center; gap: 5px; }
+  .gpactl input[type=text], .gpactl input:not([type]) { width: 64px; font: inherit; font-size: 13px; padding: 4px 7px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); }
+
+  a.news { display: flex; gap: 10px; padding: 9px 0; color: inherit; text-decoration: none; border-top: 1px solid var(--line); }
+  a.news:first-child { border-top: 0; }
+  a.news:hover .title { color: var(--accent); }
+
+  .empty { color: var(--muted); padding: 6px 0; }
+  .notice { border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; background: var(--orange-bg); color: var(--orange); }
+  .notice.red { background: var(--red-bg); color: var(--red); }
+  .loading { text-align: center; color: var(--muted); padding: 60px 0; }
+  .setup { max-width: 560px; margin: 32px auto; }
+  .setup a { color: var(--accent); }
+  .setup ol { padding-left: 20px; }
+  .setup li { margin-bottom: 6px; }
+  .setup input {
+    width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); margin: 8px 0 12px;
+  }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  @media (max-width: 780px) {
+    .wrap { padding-top: 18px; }
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .hero { padding: 18px; border-radius: 18px; }
+    .hero-count { font-size: 38px; }
+    .calc-row { gap: 6px; }
+    .stats { width: 100%; }
+    .stat { flex: 1; min-width: 0; padding: 10px 12px; }
+    .chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px 14px; padding: 0 18px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    header .btn { display: none; }
+    .when .skip { display: inline-block; margin: 0 0 0 8px; }
+    /* Меню на телефоне — снизу, как в приложении */
+    .menu {
+      position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; justify-content: space-around; gap: 0;
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--card);
+    }
+    .menu button { border: 0; background: none; padding: 8px 10px; font-size: 13px; color: var(--muted); }
+    .menu button.on { background: var(--card2); color: var(--accent); }
+    @media (prefers-color-scheme: dark) { .menu button.on { color: var(--accent); } }
+    .wrap { padding-bottom: 96px; }
+    .gpatop b { font-size: 22px; }
+    /* На телефоне срок уходит под название, чтобы названию хватало ширины */
+    a.row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .when { text-align: left; white-space: normal; }
+    .when b { display: inline; margin-right: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">У</div>
+    <div>
+      <h1>Мой уник</h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <span class="spacer"></span>
+    <button id="refresh">Обновить</button>
+    <a class="btn" href="https://canvas.turan-edu.kz/" target="_blank" rel="noopener">Открыть Canvas</a>
+  </header>
+
+  <nav id="menu" class="menu" hidden></nav>
+  <div id="notice" class="notice" hidden></div>
+  <div id="reconnect" class="card reconnect" hidden>
+    <h2>Маркер Canvas перестал работать</h2>
+    <p id="reconnectWhy"></p>
+    <p class="sub">Ниже — данные с последней удачной загрузки. Создай новый маркер в <a href="https://canvas.turan-edu.kz/profile/settings" target="_blank" rel="noopener">настройках Canvas</a> («Новый маркер доступа») и вставь сюда — всё остальное, включая отметки «не моё», сохранится.</p>
+    <input id="token2" type="password" placeholder="Новый маркер доступа" autocomplete="off">
+    <div class="actions"><button class="primary" id="save2">Подключить</button></div>
+  </div>
+  <div id="loading" class="loading">Загружаю данные из Canvas…</div>
+
+  <div id="setup" class="card setup" hidden>
+    <h2>Подключи Canvas — один раз</h2>
+    <ol>
+      <li>Зайди в <a href="https://canvas.turan-edu.kz/profile/settings" target="_blank" rel="noopener">Canvas → Аккаунт → Настройки</a>.</li>
+      <li>Пролистай до блока «Утвержденные интеграции» и нажми <b>«Новый маркер доступа»</b>.</li>
+      <li>Назначение — любое, например «Мой уник». Срок можно оставить пустым.</li>
+      <li>Скопируй длинную строку и вставь сюда.</li>
+    </ol>
+    <input id="token" type="password" placeholder="Маркер доступа" autocomplete="off">
+    <div class="actions">
+      <button class="primary" id="save">Подключить</button>
+      <button id="demo">Посмотреть на примере</button>
+    </div>
+    <p class="sub"><b>Важно:</b> после подключения не удаляй и не пересоздавай этот маркер в Canvas — сайт хранит именно его, и он сразу перестанет работать. Один маркер подходит и для компа, и для телефона.</p>
+    <p class="sub">Маркер сохраняется только у тебя. Никому его не показывай: он даёт доступ к твоему Canvas.</p>
+  </div>
+
+  <div id="board" hidden>
+    <div class="hero" id="hero" data-sec="deadlines"></div>
+    <div class="grid">
+      <div>
+        <div class="card" data-sec="deadlines">
+          <h2>Что сдавать
+            <label><input type="checkbox" id="hideDone" checked> скрыть сданное</label>
+          </h2>
+          <div class="chips" id="chips"></div>
+          <div id="items"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" data-sec="grades">
+          <h2>Оценки и предметы</h2>
+          <div id="risks" class="notice red" hidden></div>
+          <div id="grades"></div>
+        </div>
+        <div class="card" data-sec="gpa">
+          <h2>GPA</h2>
+          <div id="gpa"></div>
+        </div>
+        <div class="card" data-sec="news">
+          <h2>Что нового</h2>
+          <div id="feed"></div>
+        </div>
+        <div class="card" data-sec="news">
+          <h2>Объявления</h2>
+          <div id="news"></div>
+        </div>
+        <div class="card tg" id="tgCard" data-sec="more" hidden>
+          <h2>Напоминания в Telegram</h2>
+          <div id="tg"></div>
+        </div>
+        <div data-sec="more" class="morebox">
+          <p class="sub" id="moreInfo"></p>
+          <button id="forget" class="link">Отключить Canvas на этом аккаунте</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const TYPES = {
+  assignment: 'Задание', quiz: 'Тест', discussion_topic: 'Обсуждение', calendar_event: 'Событие',
+  wiki_page: 'Страница', planner_note: 'Заметка', assessment_request: 'Проверка работы',
+};
+const PALETTE = ['#6c8cff', '#f0834d', '#3dbb8a', '#d86bd0', '#e0b12e', '#4bb8d9', '#ef6079', '#9a7bf0'];
+// Формула итога в Туране: РК1 × 0,3 + РК2 × 0,3 + Экзамен × 0,4
+const WEIGHTS = { rk1: 0.3, rk2: 0.3, exam: 0.4 };
+let data = null;
+let demo = false;
+let filter = null;          // выбранный предмет или null — все
+let colors = {};            // предмет → цвет
+const openCourses = new Set(); // какие предметы раскрыты
+let settings = { skip: {}, exam: {}, goal: {}, manual: {}, credits: {}, final: {}, gpaOff: {} }; // «не моё», источник экзамена, цели, свои числа
+
+// Страница живёт в двух местах: в Google Apps Script и на компе (server.js запускает тот же Code.gs).
+// call() сам выбирает, куда обращаться.
+const GAS = typeof google !== 'undefined' && google.script && google.script.run;
+const OFFLINE = GAS ? 'Не получилось загрузить. Попробуй обновить.' : 'Сервер не отвечает. Запусти «Запустить.command» заново.';
+function call(name, arg) {
+  if (GAS) {
+    return new Promise((resolve, reject) => {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[name](arg);
+    });
+  }
+  return fetch('/api/call', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, arg }) }).then((r) => r.json());
+}
+
+// Выдуманные данные, чтобы посмотреть страницу без маркера.
+function demoData() {
+  const C = 'https://canvas.turan-edu.kz/';
+  const at = (days, h) => { const d = new Date(Date.now() + days * 86400000); d.setHours(h, 59, 0, 0); return d.toISOString(); };
+  const it = (title, course, days, h, type, points, done, overdue) => ({ title, course, date: at(days, h), url: C, type, points, needsSubmit: type !== 'calendar_event', done, overdue: !!overdue, quiz: type === 'quiz' ? { minutes: 20, attempts: 1, questions: 15 } : null });
+  let wid = 100;
+  const wk = (title, group, days, points, score, extra) => Object.assign({ id: ++wid, title, url: C, due: at(days, 23), points, score, gradedAt: score != null ? at(days + 2, 12) : null, submitted: score != null, late: false, deducted: 0, excused: false, group, omit: false, quiz: null, comments: [] }, extra);
+  const co = (id, name, score, letter, current, work) => ({ id, name, url: C, score, letter, current, term: current ? '2026-2027 (1)' : '2025-2026 (2)', teachers: current ? ['Айгуль Преподаватель'] : [], syllabus: current ? 'Цель курса, темы по неделям, политика оценивания…' : '', syllabusUrl: C, work: work || [] });
+  return {
+    name: 'Демо', updated: Date.now(), telegram: { connected: false, bot: '' }, settings: {},
+    courses: [
+      co(1, 'Математический анализ', 78.5, 'B', true, [
+        wk('Задание 1', 'Рейтинг 1', -40, 100, 82), wk('Тест 1', 'Рейтинг 1', -30, 100, 75, { quiz: { minutes: 20, attempts: 1, questions: 15 } }),
+        wk('Задание 2', 'Рейтинг 2', -5, 100, 79, { late: true, deducted: 5, comments: [{ author: 'Айгуль Преподаватель', text: 'Хорошо, но в третьей задаче потерян знак.', date: at(-3, 12) }] }),
+        wk('Задание 3', 'Рейтинг 2', 6, 100, null), wk('Неделя 1', 'Посещение занятий', -45, 1, 1, { omit: true }),
+      ]),
+      co(2, 'Программирование на Python', 92, 'A-', true, [wk('Лабораторная 1', 'Рейтинг 1', -35, 100, 95), wk('Лабораторная 2', 'Рейтинг 1', -20, 100, 89)]),
+      co(3, 'Английский язык', 64.2, 'C', true), co(4, 'История Казахстана', null, null, true),
+      co(5, 'Философия', 70.7, null, false),
+    ],
+    items: [
+      it('Эссе: моя профессия', 'Английский язык', -2, 23, 'assignment', 20, false, true),
+      it('Лабораторная №4', 'Программирование на Python', 0, 23, 'assignment', 10, false),
+      it('Тест по пределам', 'Математический анализ', 1, 18, 'quiz', 15, false),
+      it('СРС 3: реферат', 'История Казахстана', 3, 23, 'assignment', 30, true),
+      it('Консультация перед рубежкой', 'Математический анализ', 4, 14, 'calendar_event', null, false),
+      it('Рубежный контроль 2', 'Математический анализ', 16, 10, 'quiz', 100, false),
+    ],
+    feed: [
+      { kind: 'grade', title: 'Задание 2', course: 'Математический анализ', date: at(-3, 12), url: C, score: 79, points: 100, comment: 'Хорошо, но в третьей задаче потерян знак.' },
+      { kind: 'change', title: 'Дата выполнения задания изменена: Лабораторная №4', course: 'Программирование на Python', date: at(-4, 9), url: C },
+    ],
+    announcements: [{ title: 'Перенос пары на пятницу', course: 'Английский язык', date: at(-1, 9), url: C }],
+  };
+}
+
+// Чтобы текст из Canvas не мог сломать страницу.
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function safeUrl(u) {
+  return /^https:\/\//.test(u || '') ? u : 'https://canvas.turan-edu.kz/';
+}
+function startOfDay(d) {
+  const x = new Date(d); x.setHours(0, 0, 0, 0); return x;
+}
+// На сколько календарных дней дата отстоит от сегодня: 0 — сегодня, 1 — завтра, -1 — вчера.
+function dayDiff(date) {
+  return Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
+}
+function fmtDate(date) {
+  return new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', weekday: 'short' });
+}
+function fmtShort(date) {
+  return new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
+function fmtTime(date) {
+  return new Date(date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+// «2 д 5 ч», «3 ч 20 мин», «15 мин» — сколько осталось (или прошло).
+function span(ms) {
+  const min = Math.max(1, Math.round(Math.abs(ms) / 60000));
+  const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60), m = min % 60;
+  if (d >= 7) return d + ' д';
+  if (d >= 1) return d + ' д' + (h ? ' ' + h + ' ч' : '');
+  if (h >= 1) return h + ' ч' + (m ? ' ' + m + ' мин' : '');
+  return m + ' мин';
+}
+// 1 попытка, 2 попытки, 5 попыток
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  return n + ' ' + (a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many);
+}
+function quizText(q) {
+  if (!q) return '';
+  const parts = [];
+  if (q.minutes) parts.push(q.minutes + ' мин');
+  if (q.attempts) parts.push(q.attempts < 0 ? 'попытки без лимита' : plural(q.attempts, 'попытка', 'попытки', 'попыток'));
+  if (q.questions) parts.push(plural(q.questions, 'вопрос', 'вопроса', 'вопросов'));
+  return parts.join(' · ');
+}
+function round1(x) { return Math.round(x * 10) / 10; }
+// Как показывает Canvas: два знака после запятой (77,17).
+function round2(x) { return Math.round(x * 100) / 100; }
+// АСУ округляет до целого: 89,9 → 90, 65,4 → 65, 65,7 → 66.
+function asuGuess(x) {
+  if (x == null) return '';
+  const r = Math.round(x);
+  return r === round2(x) ? '' : `в АСУ, скорее всего, ${r}`;
+}
+function isPast(it) { return new Date(it.date) < new Date(); }
+function colorOf(course) { return colors[course] || '#8a8d99'; }
+
+function groupOf(item) {
+  if (item.overdue) return 'Просрочено';
+  if (isPast(item)) return null; // прошедшее и сданное не показываем
+  const d = dayDiff(item.date);
+  if (d === 0) return 'Сегодня';
+  if (d === 1) return 'Завтра';
+  if (d <= 7) return 'Ближайшие 7 дней';
+  return 'Позже';
+}
+
+function assignColors() {
+  colors = {};
+  const names = data.courses.filter((c) => c.current).map((c) => c.name);
+  for (const it of data.items) if (!names.includes(it.course)) names.push(it.course);
+  names.forEach((n, i) => { colors[n] = PALETTE[i % PALETTE.length]; });
+}
+
+// ---------- Главный блок ----------
+
+function renderHero() {
+  const todo = todoItems().filter((it) => it.date && !it.done);
+  const upcoming = todo.filter((it) => !it.overdue && !isPast(it)).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const overdue = todo.filter((it) => it.overdue).length;
+  const today = upcoming.filter((it) => dayDiff(it.date) === 0).length;
+  const week = upcoming.filter((it) => dayDiff(it.date) <= 7).length;
+  const next = upcoming[0];
+  const main = next
+    ? `<a class="hero-main" href="${esc(safeUrl(next.url))}" target="_blank" rel="noopener">
+        <div class="hero-label">Ближайший дедлайн через</div>
+        <div class="hero-count num">${esc(span(new Date(next.date) - Date.now()))}</div>
+        <div class="hero-title">${esc(next.title)}</div>
+        <div class="hero-meta">${esc(next.course)} · ${esc(fmtDate(next.date))}, ${esc(fmtTime(next.date))}</div>
+      </a>`
+    : `<div class="hero-main">
+        <div class="hero-label">Ближайшие два месяца</div>
+        <div class="hero-count">Хвостов нет</div>
+        <div class="hero-meta">Всё, что было задано, сдано.</div>
+      </div>`;
+  $('hero').innerHTML = main + `<div class="stats">
+      <div class="stat"><b class="num">${today}</b><span>сегодня</span></div>
+      <div class="stat"><b class="num">${week}</b><span>за 7 дней</span></div>
+      <div class="stat ${overdue ? 'alert' : ''}"><b class="num">${overdue}</b><span>просрочено</span></div>
+    </div>`;
+}
+
+// ---------- Что сдавать ----------
+
+// Дедлайны без того, что помечено «не моё».
+function todoItems() {
+  return data.items.filter((it) => !(it.aid && settings.skip[it.aid]));
+}
+
+function renderChips(visible) {
+  const counts = {};
+  for (const it of visible) if (!it.done) counts[it.course] = (counts[it.course] || 0) + 1;
+  const names = [...new Set(visible.map((it) => it.course))];
+  if (filter && !names.includes(filter)) filter = null;
+  if (names.length < 2) { $('chips').innerHTML = ''; return; }
+  $('chips').innerHTML =
+    `<button class="chip ${filter ? '' : 'on'}" data-course="">Все</button>` +
+    names.map((n) => `<button class="chip ${filter === n ? 'on' : ''}" data-course="${esc(n)}" style="--c:${colorOf(n)}">
+      <span class="dot"></span>${esc(n)}${counts[n] ? ` <span class="num sub">${counts[n]}</span>` : ''}</button>`).join('');
+}
+
+function renderItems() {
+  const hide = $('hideDone').checked;
+  const order = ['Просрочено', 'Сегодня', 'Завтра', 'Ближайшие 7 дней', 'Позже'];
+  const visible = todoItems().filter((it) => it.date && groupOf(it) && !(hide && it.done));
+  renderChips(visible);
+  const groups = {};
+  for (const it of visible) {
+    if (filter && it.course !== filter) continue;
+    (groups[groupOf(it)] ||= []).push(it);
+  }
+  let html = '';
+  for (const g of order) {
+    const list = groups[g];
+    if (!list) continue;
+    list.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const cls = g === 'Просрочено' ? 'red' : g === 'Сегодня' ? 'orange' : '';
+    html += `<div class="group ${cls}">${g} · ${list.length}</div>`;
+    for (const it of list) {
+      const left = new Date(it.date) - Date.now();
+      const late = it.overdue;
+      const pill = it.done ? '<span class="pill green">сдано</span>'
+        : late ? `<span class="pill red">${it.locked ? 'приём закрыт' : 'не сдано'}</span>` : '';
+      const pts = it.points != null ? ` · ${esc(it.points)} б.` : '';
+      const quiz = quizText(it.quiz) ? ` · ${esc(quizText(it.quiz))}` : '';
+      const gain = it.done ? null : impact(it);
+      const gainPill = gain ? `<span class="pill blue" title="Столько добавит к итогу по предмету, если сдать на максимум">до +${round1(gain.final)} к итогу · ${esc(gain.label)}</span>` : '';
+      const rel = late ? span(left) + ' назад' : 'через ' + span(left);
+      const urgency = it.done ? '' : late ? 'late' : left < 86400000 ? 'soon' : '';
+      const skipBtn = it.aid ? `<button class="skip" data-skip="${esc(it.aid)}" title="Это задание не для моей группы — убрать и не считать в РК">не моё</button>` : '';
+      html += `<a class="row ${it.done ? 'done' : ''}" style="--c:${colorOf(it.course)}" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener">
+        <div class="main">
+          <div><span class="title">${esc(it.title)}</span>${pill}</div>
+          <div class="meta">${esc(it.course)} · ${esc(TYPES[it.type] || 'Другое')}${pts}${quiz}</div>
+          ${gainPill ? `<div class="gain">${gainPill}</div>` : ''}
+        </div>
+        <div class="when ${urgency}"><b class="num">${esc(rel)}</b><small>${esc(fmtDate(it.date))}, ${esc(fmtTime(it.date))}</small>${skipBtn}</div>
+      </a>`;
+    }
+  }
+  const hidden = data.items.length - todoItems().length;
+  const note = hidden ? `<div class="sub hiddenNote">Скрыто как «не моё»: ${hidden}. Вернуть можно в списке работ предмета.</div>` : '';
+  $('items').innerHTML = (html || '<div class="empty">Здесь пусто — сдавать нечего.</div>') + note;
+}
+
+// ---------- Расчёт РК и итога ----------
+
+const RK_TEST = { rk1: /(рейтинг|рк)\s*1/i, rk2: /(рейтинг|рк)\s*2/i };
+const EXAM_TEST = /экзамен|итогов|сесси/i;
+const LABELS = { rk1: 'РК1', rk2: 'РК2', exam: 'Экзамен' };
+const PASS = 50; // РК ниже 50 — недопуск к сессии
+
+// Откуда берётся экзамен: '' — ввожу сам, иначе название группы работ в Canvas (например «СРО»).
+function examSource(course) {
+  if (course.id in settings.exam) return settings.exam[course.id];
+  const auto = course.work.find((w) => !w.omit && w.score != null && EXAM_TEST.test(w.group) && !/пересдач/i.test(w.group));
+  return auto ? auto.group : '';
+}
+function partOf(course, w) {
+  if (settings.skip[w.id] || w.excused || !(w.points > 0)) return null;
+  if (w.group && w.group === examSource(course)) return 'exam';
+  if (w.omit || /пересдач/i.test(w.group)) return null; // посещаемость и прочее в оценку не идёт
+  if (RK_TEST.rk1.test(w.group)) return 'rk1';
+  if (RK_TEST.rk2.test(w.group)) return 'rk2';
+  return null;
+}
+
+// Считает одну часть оценки (РК1, РК2 или экзамен) по работам из Canvas.
+function partStats(course, part) {
+  const now = Date.now();
+  const s = { earned: 0, gradedMax: 0, totalMax: 0, graded: 0, total: 0, overdue: 0, overdueMax: 0, pending: 0 };
+  for (const w of course.work) {
+    if (partOf(course, w) !== part) continue;
+    s.total++; s.totalMax += w.points;
+    if (w.score != null) { s.earned += w.score; s.gradedMax += w.points; s.graded++; }
+    else if (w.submitted) s.pending++;
+    else if (w.due && new Date(w.due) < now) { s.overdue++; s.overdueMax += w.points; } // срок прошёл, не сдано = 0
+  }
+  if (!s.total) return null;
+  s.openMax = s.totalMax - s.gradedMax;      // баллы за всё, что ещё не оценено
+  s.open = s.total - s.graded;
+  // «Сейчас»: по оценённым работам, а несданное с прошедшим сроком считается нулём.
+  const base = s.gradedMax + s.overdueMax;
+  s.now = base ? 100 * s.earned / base : null;
+  s.floor = 100 * s.earned / s.totalMax;     // если больше ничего не сдать
+  return s;
+}
+// Сколько в среднем нужно за оставшиеся работы, чтобы часть вышла не ниже target.
+function needFor(s, target) {
+  if (!s.openMax) return null;
+  return 100 * (target / 100 * s.totalMax - s.earned) / s.openMax;
+}
+
+function manual(course, k) {
+  const v = (settings.manual[course.id] || {})[k];
+  return v === '' || v == null ? null : num(v);
+}
+function num(v) {
+  const x = parseFloat(String(v ?? '').replace(',', '.'));
+  return isFinite(x) ? Math.min(100, Math.max(0, x)) : null;
+}
+
+// Всё про предмет одним объектом: значения РК и экзамена, итог, риск недопуска.
+function model(course) {
+  const m = { stats: {}, value: {}, risks: [] };
+  for (const k of ['rk1', 'rk2', 'exam']) {
+    const s = partStats(course, k);
+    m.stats[k] = s;
+    const own = manual(course, k);
+    // Экзамен из группы копится (как СРО): считаем от всех баллов группы, а не только от оценённых.
+    m.value[k] = own != null ? own : !s ? null : k === 'exam' ? s.floor : s.now;
+    if (k !== 'exam' && m.value[k] != null && m.value[k] < PASS) m.risks.push(`${LABELS[k]} сейчас ${round1(m.value[k])}`);
+  }
+  const { rk1, rk2, exam } = m.value;
+  m.base = rk1 != null && rk2 != null ? WEIGHTS.rk1 * rk1 + WEIGHTS.rk2 * rk2 : null;
+  m.final = m.base != null && exam != null ? m.base + WEIGHTS.exam * exam : null;
+  m.goal = num(settings.goal[course.id] ?? 70);
+  return m;
+}
+
+// Сколько задание добавит к итогу предмета, если сдать его на максимум.
+function impact(it) {
+  if (!it.aid) return null;
+  for (const c of data.courses) {
+    if (!c.current) continue;
+    const w = c.work.find((x) => x.id === it.aid);
+    if (!w) continue;
+    const part = partOf(c, w);
+    const s = part && partStats(c, part);
+    if (!s || w.score != null) return null;
+    return { final: 100 * w.points / s.totalMax * WEIGHTS[part], label: LABELS[part] };
+  }
+  return null;
+}
+
+function partNote(course, k, m) {
+  const s = m.stats[k];
+  if (manual(course, k) != null) return 'введено вручную' + (s ? ` · по Canvas ${round1(k === 'exam' ? s.floor : s.now ?? 0)}` : '');
+  if (!s) return k === 'exam' ? 'в Canvas оценки за экзамен нет — введи сам или выбери группу работ' : 'в Canvas работ этой рубежки нет';
+  const bits = [];
+  if (asuGuess(m.value[k])) bits.push(asuGuess(m.value[k]));
+  if (k === 'exam') bits.push(`накоплено ${round1(s.earned)} из ${round1(s.totalMax)} б.`);
+  bits.push(`оценено ${s.graded} из ${s.total}`);
+  if (s.overdue) bits.push(`<b class="bad">не сдано в срок: ${s.overdue} — считаю как 0</b>`);
+  if (s.pending) bits.push(`на проверке: ${s.pending}`);
+  if (s.open && k !== 'exam') {
+    bits.push(`если больше ничего не сдать: ${round1(s.floor)}`);
+    const need = needFor(s, PASS);
+    if (need != null && need > 0) bits.push(need > 100 ? `<b class="bad">до ${PASS} уже не дотянуть</b>` : `для допуска (${PASS}) за оставшиеся нужно в среднем ${Math.ceil(need)} из 100`);
+    const goal = m.goal;
+    if (goal != null && goal > PASS) {
+      const g = needFor(s, goal);
+      if (g != null && g > 0) bits.push(g > 100 ? `${goal} уже не выйдет` : `чтобы вышло ${goal} — в среднем ${Math.ceil(g)} из 100`);
+    }
+  }
+  return bits.join(' · ');
+}
+
+function resultText(m) {
+  if (m.base == null) return '<span class="sub">Нужны РК1 и РК2 — их нет в Canvas, введи сам.</span>';
+  if (m.final != null) {
+    return `Итог сейчас: <b class="num">${round1(m.final)}</b> из 100 <span class="sub">(рубежки дают ${round1(m.base)}, экзамен ${round1(m.final - m.base)})</span>`;
+  }
+  let text = `За рубежки сейчас <b class="num">${round1(m.base)}</b> из 60.`;
+  if (m.goal != null) {
+    const need = (m.goal - m.base) / WEIGHTS.exam;
+    text += ' ' + (need <= 0 ? `Итог ${m.goal} набран уже рубежками.`
+      : need > 100 ? `Итог ${m.goal} не выйдет: даже 100 на экзамене дадут ${round1(m.base + 40)}.`
+      : `Для итога ${m.goal} на экзамене нужно не меньше <b class="num">${Math.ceil(need * 10) / 10}</b>.`);
+  }
+  return text;
+}
+
+function calcHtml(course) {
+  const own = settings.manual[course.id] || {};
+  const groups = [...new Set(course.work.map((w) => w.group).filter((g) => g && !RK_TEST.rk1.test(g) && !RK_TEST.rk2.test(g) && !/посещ/i.test(g)))];
+  const src = examSource(course);
+  const row = (k) => `<div class="crow">
+      <div class="clabel">${LABELS[k]}</div>
+      <div class="cval num" data-val="${k}"></div>
+      <input class="num" inputmode="decimal" data-k="${k}" value="${esc(own[k] ?? '')}" placeholder="своё">
+      <div class="cnote" data-note="${k}"></div>
+    </div>`;
+  return `<div class="calc" data-id="${esc(course.id)}">
+    <div class="calc-title">Итог = РК1 × 0,3 + РК2 × 0,3 + Экзамен × 0,4. Числа берутся из Canvas; в поле «своё» можно вписать другое. В АСУ оценки округляются до целого и могут немного отличаться от Canvas.</div>
+    ${row('rk1')}${row('rk2')}${row('exam')}
+    <label class="goal">Экзамен берётся из
+      <select data-k="examSource"><option value="">ввожу сам</option>${groups.map((g) => `<option ${g === src ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>
+    </label>
+    <div class="calc-out"></div>
+    <label class="goal">Хочу итог не ниже <input class="num" inputmode="decimal" data-k="goal" value="${esc(settings.goal[course.id] ?? 70)}"></label>
+  </div>`;
+}
+
+function courseById(id) {
+  return data.courses.find((c) => String(c.id) === String(id));
+}
+
+// Обновляет цифры в калькуляторе и в строке предмета, не трогая поля ввода (чтобы не сбивать набор).
+function updateCalc(box) {
+  const course = courseById(box.dataset.id);
+  const m = model(course);
+  for (const k of ['rk1', 'rk2', 'exam']) {
+    const v = m.value[k];
+    const el = box.querySelector(`[data-val="${k}"]`);
+    el.textContent = v != null ? round2(v) : '—';
+    el.classList.toggle('bad', k !== 'exam' && v != null && v < PASS);
+    box.querySelector(`[data-note="${k}"]`).innerHTML = partNote(course, k, m);
+  }
+  box.querySelector('.calc-out').innerHTML = resultText(m);
+  const line = document.querySelector(`[data-line="${course.id}"]`);
+  if (line) line.innerHTML = lineHtml(m);
+  renderRisks();
+}
+
+// ---------- Оценки и предметы ----------
+
+function lineHtml(m) {
+  const part = (k) => `${LABELS[k]} <b class="num ${k !== 'exam' && m.value[k] != null && m.value[k] < PASS ? 'bad' : ''}">${m.value[k] != null ? round2(m.value[k]) : '—'}</b>`;
+  const risk = m.risks.length ? '<span class="pill red">риск недопуска</span>' : '';
+  const total = m.final != null ? ` · итог <b class="num">${round1(m.final)}</b>` : '';
+  return `${part('rk1')} · ${part('rk2')} · ${part('exam')}${total}${risk}`;
+}
+
+function renderRisks() {
+  const list = data.courses.filter((c) => c.current).map((c) => ({ c, m: model(c) })).filter((x) => x.m.risks.length);
+  $('risks').hidden = !list.length;
+  $('risks').innerHTML = list.length
+    ? `<b>Риск недопуска к сессии (РК ниже ${PASS}):</b> ` + list.map((x) => `${esc(x.c.name)} — ${esc(x.m.risks.join(', '))}`).join('; ')
+    : '';
+}
+
+function workRow(course, w) {
+  const skipped = !!settings.skip[w.id];
+  const score = w.score != null
+    ? `<div class="wscore num">${esc(w.score)}${w.points != null ? ' / ' + esc(w.points) : ''}</div>`
+    : `<div class="wscore none">${w.excused ? 'зачтено' : w.submitted ? 'на проверке' : '—'}</div>`;
+  const bits = [];
+  if (skipped) bits.push('не моё — не считается');
+  if (w.due) bits.push('до ' + fmtShort(w.due));
+  if (!skipped && w.score == null && !w.submitted && w.due && new Date(w.due) < new Date() && partOf(course, w)) bits.push('не сдано в срок — считаю как 0');
+  if (w.oldAttempt) bits.push('оценка за прошлую попытку, новая ещё не проверена');
+  if (w.late) bits.push('сдано с опозданием' + (w.deducted ? `, −${w.deducted} б.` : ''));
+  if (quizText(w.quiz)) bits.push(quizText(w.quiz));
+  const comments = w.comments.map((c) => `<div class="comment"><b>${esc(c.author)}:</b> ${esc(c.text)}</div>`).join('');
+  return `<a class="work ${skipped ? 'done' : ''}" href="${esc(safeUrl(w.url))}" target="_blank" rel="noopener">
+    <div class="main"><div class="wname">${esc(w.title)}</div><div class="meta">${esc(bits.join(' · '))}</div>${comments}</div>
+    <div class="wright">${score}<button class="skip" data-skip="${esc(w.id)}">${skipped ? 'вернуть' : 'не моё'}</button></div>
+  </a>`;
+}
+
+function courseHtml(c) {
+  const bar = c.score != null ? `<div class="bar"><i style="width:${Math.max(0, Math.min(100, Number(c.score)))}%"></i></div>` : '';
+  const top = `<div class="gtop">
+      <div class="gname">${esc(c.name)}</div>
+      <div class="gscore num">${c.score != null ? esc(c.score) + '%' : '—'}${c.letter ? `<small>${esc(c.letter)}</small>` : ''}</div>
+    </div>${bar}`;
+  if (!c.current) {
+    return `<a class="grade" style="--c:var(--muted)" href="${esc(safeUrl(c.url))}" target="_blank" rel="noopener">${top}</a>`;
+  }
+  // Работы — по группам Canvas; то, что не идёт в оценку, убираем в свёрнутый блок.
+  const groups = {};
+  const extra = [];
+  for (const w of c.work) (w.omit && w.group !== examSource(c) ? extra : (groups[w.group || 'Без группы'] ||= [])).push(w);
+  let works = '';
+  for (const g of Object.keys(groups)) works += `<div class="wgroup">${esc(g)}</div>` + groups[g].map((w) => workRow(c, w)).join('');
+  if (extra.length) works += `<details class="sub"><summary>Не идёт в оценку: посещаемость и прочее · ${extra.length}</summary>${extra.map((w) => workRow(c, w)).join('')}</details>`;
+  const info = [
+    c.teachers.length ? 'Преподаватель: ' + esc(c.teachers.join(', ')) : '',
+    `<a href="${esc(safeUrl(c.syllabusUrl))}" target="_blank" rel="noopener">Программа курса ↗</a>`,
+    `<a href="${esc(safeUrl(c.url))}" target="_blank" rel="noopener">Оценки в Canvas ↗</a>`,
+  ].filter(Boolean).join(' · ');
+  return `<details class="course" data-id="${esc(c.id)}" style="--c:${colorOf(c.name)}" ${openCourses.has(String(c.id)) ? 'open' : ''}>
+    <summary>${top}<div class="line" data-line="${esc(c.id)}">${lineHtml(model(c))}</div></summary>
+    <div class="inside">
+      <div class="info">${info}</div>
+      ${calcHtml(c)}
+      ${works || '<div class="empty">Работ в Canvas пока нет.</div>'}
+    </div>
+  </details>`;
+}
+
+function renderCourses() {
+  const now = data.courses.filter((c) => c.current);
+  const old = data.courses.filter((c) => !c.current);
+  let html = now.length ? now.map(courseHtml).join('') : '<div class="empty">Курсов в этом семестре не найдено.</div>';
+  if (old.length) {
+    // Прошлые семестры: свежие сверху, внутри семестра — по алфавиту.
+    old.sort((a, b) => (b.term || '').localeCompare(a.term || '') || a.name.localeCompare(b.name, 'ru'));
+    let last = null;
+    html += `<details><summary>Прошлые семестры · ${old.length}</summary>`;
+    for (const c of old) {
+      if (c.term !== last) html += `<div class="group">${esc(c.term || 'Без семестра')}</div>`;
+      html += courseHtml(c);
+      last = c.term;
+    }
+    html += '</details>';
+  }
+  $('grades').innerHTML = html;
+  $('grades').querySelectorAll('.calc').forEach(updateCalc);
+  renderRisks();
+}
+
+// Настройки сохраняются в аккаунте с небольшой задержкой, чтобы не слать запрос на каждую букву.
+let saveTimer = null;
+function saveSettingsSoon() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { if (!demo) call('saveSettings', settings).catch(() => {}); }, 700);
+}
+function toggleSkip(id) {
+  if (settings.skip[id]) delete settings.skip[id]; else settings.skip[id] = 1;
+  saveSettingsSoon();
+  renderHero(); renderItems(); renderCourses();
+}
+
+// ---------- Что нового, объявления ----------
+
+function feedRow(f) {
+  // Canvas пишет «Дата выполнения задания изменена: Название, Предмет» — оставляем только название.
+  let title = f.title;
+  let changed = false;
+  if (f.kind === 'change') {
+    const cut = title.replace(/^Дата выполнения задания изменена:\s*/, '');
+    changed = cut !== title;
+    title = cut.endsWith(', ' + f.course) ? cut.slice(0, -f.course.length - 2) : cut.replace(/,\s*[^,]*$/, (m) => (f.course.startsWith(m.slice(1).trim()) ? '' : m));
+  }
+  const label = f.kind === 'grade'
+    ? `<span class="pill green">оценка ${esc(f.score)}${f.points != null ? ' / ' + esc(f.points) : ''}</span>`
+    : f.kind === 'comment' ? '<span class="pill green">отзыв</span>'
+    : changed ? '<span class="pill orange">срок изменён</span>' : '';
+  const comment = f.comment ? `<div class="comment">${esc(f.comment)}</div>` : '';
+  return `<a class="news" href="${esc(safeUrl(f.url))}" target="_blank" rel="noopener">
+    <div class="main"><div><span class="title">${esc(title)}</span>${label}</div><div class="meta">${esc(f.course)}</div>${comment}</div>
+    <div class="meta">${esc(fmtShort(f.date))}</div>
+  </a>`;
+}
+function renderFeed() {
+  const list = data.feed || [];
+  if (!list.length) { $('feed').innerHTML = '<div class="empty">За две недели ничего нового.</div>'; return; }
+  const rest = list.slice(6);
+  $('feed').innerHTML = list.slice(0, 6).map(feedRow).join('') +
+    (rest.length ? `<details><summary>Показать ещё · ${rest.length}</summary>${rest.map(feedRow).join('')}</details>` : '');
+}
+
+function renderNews() {
+  $('news').innerHTML = data.announcements.length
+    ? data.announcements.slice(0, 8).map((n) => `<a class="news" href="${esc(safeUrl(n.url))}" target="_blank" rel="noopener">
+        <div class="main"><div class="title">${esc(n.title)}</div><div class="meta">${esc(n.course)}</div></div>
+        <div class="meta">${n.date ? esc(fmtShort(n.date)) : ''}</div>
+      </a>`).join('')
+    : '<div class="empty">За два месяца объявлений нет.</div>';
+}
+
+// ---------- Telegram ----------
+
+function renderTg(message) {
+  $('tgCard').hidden = !GAS; // расписание работает только в версии по ссылке
+  const tg = data.telegram || {};
+  const msg = message ? `<div class="msg">${esc(message)}</div>` : '';
+  $('tg').innerHTML = tg.connected
+    ? `<p>Подключено${tg.bot ? ': <b>@' + esc(tg.bot) + '</b>' : ''}. Утром в 8:00 приходит сводка, за 3 часа до срока — напоминание, новые оценки — в течение часа.</p>
+       <div class="actions"><button id="tgTest">Прислать сводку сейчас</button><button id="tgOff">Отключить</button></div>${msg}`
+    : `<ol>
+         <li>В Telegram открой <b>@BotFather</b>, отправь <b>/newbot</b> и придумай боту имя. В ответ придёт маркер бота.</li>
+         <li>Открой своего нового бота и нажми <b>Start</b>.</li>
+         <li>Вставь маркер бота сюда.</li>
+       </ol>
+       <input id="tgToken" type="password" placeholder="Маркер бота" autocomplete="off">
+       <div class="actions"><button class="primary" id="tgOn">Подключить</button></div>${msg}`;
+}
+
+$('tg').onclick = async (e) => {
+  const id = e.target.id;
+  if (!['tgOn', 'tgOff', 'tgTest'].includes(id)) return;
+  e.target.disabled = true;
+  try {
+    if (id === 'tgOn') {
+      const token = $('tgToken').value.trim();
+      if (!token) return;
+      const r = await call('tgConnect', token);
+      if (r.ok) { data.telegram = { connected: true, bot: r.bot }; renderTg(); }
+      else renderTg(r.error === 'noStart' ? `Бот @${r.bot} найден, но ты ему ещё не писал. Открой его, нажми Start и подключи снова.` : 'Telegram не принял маркер бота. Проверь, что скопировал его целиком.');
+    } else if (id === 'tgOff') {
+      if (!confirm('Отключить напоминания в Telegram?')) return;
+      await call('tgDisconnect');
+      data.telegram = { connected: false };
+      renderTg();
+    } else {
+      const r = await call('tgTest');
+      renderTg(r.ok ? 'Отправил — проверь Telegram.' : 'Не получилось отправить. Проверь, что бот не заблокирован.');
+    }
+  } catch {
+    renderTg('Не получилось связаться с сервером. Попробуй ещё раз.');
+  } finally {
+    e.target.disabled = false;
+  }
+};
+
+// ---------- GPA ----------
+
+// Шкала, принятая в вузах Казахстана: процент → буква → балл GPA.
+const SCALE = [[95, 'A', 4], [90, 'A-', 3.67], [85, 'B+', 3.33], [80, 'B', 3], [75, 'B-', 2.67], [70, 'C+', 2.33],
+  [65, 'C', 2], [60, 'C-', 1.67], [55, 'D+', 1.33], [50, 'D', 1], [0, 'F', 0]];
+function gradeOf(percent) {
+  const x = Math.round(percent);
+  const row = SCALE.find((r) => x >= r[0]);
+  return { letter: row[1], points: row[2] };
+}
+const fmtGpa = (g) => (g == null ? '—' : g.toFixed(2));
+
+// Семестр одной строкой: «2024-2025/1» — из названия семестра Canvas «2024-2025 (1)».
+function termKey(text) {
+  const t = String(text || '');
+  const m = /(\d{4})\s*-\s*(\d{4})/.exec(t);
+  if (!m) return '';
+  const n = /летн/i.test(t) ? 'лето' : ((/\((\d)\)/.exec(t) || /(\d)\s*семестр/i.exec(t) || [])[1] || '');
+  return m[1] + '-' + m[2] + '/' + n;
+}
+function termLabel(key) {
+  const [years, n] = key.split('/');
+  return years + ', ' + (n === 'лето' ? 'лето' : n + ' семестр');
+}
+// ----- Расчёт -----
+
+// Прогноз для предмета этого семестра: итог по формуле, а если экзамена ещё нет — как будто сдашь его на уровне рубежек.
+function forecast(c) {
+  const m = model(c);
+  if (m.final != null) return { value: m.final, how: 'по формуле' };
+  if (m.base != null) return { value: m.base / 0.6, how: 'прогноз' };
+  if (c.score != null) return { value: Number(c.score), how: 'Canvas, без РК' };
+  return null;
+}
+
+// Список предметов для GPA: процент — из Canvas (так все и ориентируются), кредиты — те, что вписал сам.
+function canvasPct(c) {
+  const own = num(settings.final[c.id]);
+  if (own != null) return { value: own, how: 'своё' };
+  if (c.current) return forecast(c);
+  return c.score != null ? { value: Number(c.score), how: 'Canvas' } : null;
+}
+function gpaEntries() {
+  return data.courses.map((c) => {
+    const f = canvasPct(c);
+    const cr = parseFloat(String(settings.credits[c.id] ?? '').replace(',', '.'));
+    return {
+      id: c.id, term: termKey(c.term) || c.term || '', name: c.name, credits: isFinite(cr) && cr > 0 ? cr : null,
+      pct: f ? f.value : null, pts: null, how: f ? f.how : '', current: c.current, editable: true,
+      off: c.id in settings.gpaOff ? !!settings.gpaOff[c.id] : /пробн/i.test(c.name), // пробное тестирование — не предмет
+    };
+  });
+}
+function pointsOf(e) {
+  if (e.pts != null) return e.pts;
+  return e.pct != null ? gradeOf(e.pct).points : null;
+}
+function gpaOf(list) {
+  let sum = 0, w = 0;
+  for (const e of list) {
+    const p = pointsOf(e);
+    if (p == null || e.off) continue;
+    const cr = e.credits || 1; // кредиты не указаны — все предметы весят одинаково
+    sum += p * cr;
+    w += cr;
+  }
+  return w ? sum / w : null;
+}
+
+// ----- Вывод -----
+
+function gpaRow(e) {
+  const p = pointsOf(e);
+  const letter = e.pct != null ? gradeOf(e.pct).letter : '';
+  const right = p != null ? `${letter || '—'}<small>${p.toFixed(2)}</small>` : '—';
+  // Как в АСУ: процент округляется до целого (89,9 → 90, 65,4 → 65), буква ставится по округлённому.
+  const exact = e.pct == null ? null : Math.round(e.pct * 100) / 100; // два знака, как в Canvas: 79,47, а не 79,5
+  const pctText = exact == null ? 'нет оценки' : [exact + '%', asuGuess(e.pct)].filter(Boolean).join(' · ');
+  const meta = [e.credits ? plural(e.credits, 'кредит', 'кредита', 'кредитов') : '', pctText, e.how].filter(Boolean).join(' · ');
+  const controls = e.editable ? `<div class="gpactl">
+      <label>итог<input class="num" inputmode="decimal" data-g="final" value="${esc(settings.final[e.id] ?? '')}" placeholder="${e.pct != null && e.how !== 'своё' ? round1(e.pct) : '0–100'}"></label>
+      <label>кредиты<input class="num" inputmode="decimal" data-g="credits" value="${esc(settings.credits[e.id] ?? '')}" placeholder="—"></label>
+      <label class="chk"><input type="checkbox" data-g="on" ${e.off ? '' : 'checked'}> в GPA</label>
+    </div>` : '';
+  return `<div class="gparow ${e.off ? 'off' : ''}" ${e.editable ? `data-id="${esc(e.id)}"` : ''}>
+    <div class="gpaname">${esc(e.name)}<div class="meta">${esc(meta)}</div></div>
+    <div class="gpaletter num">${right}</div>${controls}
+  </div>`;
+}
+
+function renderGpa() {
+  const entries = gpaEntries();
+  const cur = entries.filter((e) => e.current);
+  const past = entries.filter((e) => !e.current);
+  const terms = [...new Set(past.map((e) => e.term))].sort().reverse();
+  const anyCredits = entries.some((e) => e.credits);
+  // Сохраняем, какие семестры раскрыты, чтобы перерисовка их не схлопывала.
+  const open = new Set([...$('gpa').querySelectorAll('details.gpablock')].filter((d) => d.open).map((d) => d.dataset.term));
+  let html = `<div class="gpatop">
+      <div><div class="sub">Прошлые семестры</div><b class="num">${fmtGpa(gpaOf(past))}</b></div>
+      <div><div class="sub">Этот семестр, прогноз</div><b class="num">${fmtGpa(gpaOf(cur))}</b></div>
+      <div><div class="sub">Вместе с прогнозом</div><b class="num">${fmtGpa(gpaOf(entries))}</b></div>
+    </div>`;
+  html += `<p class="sub">Процент — как в Canvas. Для буквы он округляется до целого, как в АСУ, и переводится по шкале A = 4,0 … D = 1,0, F = 0. <b>Оценки и GPA в АСУ могут немного отличаться</b> — официальные цифры там. ${anyCredits ? 'Учитываю кредиты, которые ты вписал.' : 'Кредиты не вписаны — все предметы весят одинаково. Впиши кредиты из АСУ, и расчёт станет точнее.'}</p>`;
+  const block = (key, title, list, extra) => {
+    return `<details class="gpablock" data-term="${esc(key)}" ${open.has(key) || (!open.size && extra) ? 'open' : ''}>
+      <summary>${esc(title)} · GPA ${fmtGpa(gpaOf(list))}</summary>${extra || ''}${list.map(gpaRow).join('')}</details>`;
+  };
+  if (cur.length) html += block('cur', 'Этот семестр', cur, '<p class="sub">Прогноз: итог по формуле, а если экзамена ещё нет — как будто сдашь его на уровне рубежек.</p>');
+  for (const t of terms) html += block(t, /\//.test(t) ? termLabel(t) : t || 'Без семестра', past.filter((e) => e.term === t));
+  $('gpa').innerHTML = html;
+}
+
+$('gpa').addEventListener('change', onGpaInput);
+$('gpa').addEventListener('input', (e) => { if (e.target.type !== 'checkbox') onGpaInput(e); });
+let gpaTimer = null;
+function onGpaInput(e) {
+  const row = e.target.closest('.gparow[data-id]');
+  if (!row) return;
+  const id = row.dataset.id, k = e.target.dataset.g;
+  if (k === 'on') settings.gpaOff[id] = !e.target.checked;
+  else if (k === 'final') settings.final[id] = e.target.value;
+  else settings.credits[id] = e.target.value;
+  saveSettingsSoon();
+  // Перерисовываем с паузой, чтобы не сбивать набор цифр.
+  clearTimeout(gpaTimer);
+  gpaTimer = setTimeout(() => {
+    const focused = document.activeElement && document.activeElement.closest('.gparow') ? [document.activeElement.closest('.gparow').dataset.id, document.activeElement.dataset.g] : null;
+    renderGpa();
+    if (focused) {
+      const el = $('gpa').querySelector(`.gparow[data-id="${focused[0]}"] [data-g="${focused[1]}"]`);
+      if (el) { el.focus(); if (el.setSelectionRange && el.type !== 'checkbox') el.setSelectionRange(el.value.length, el.value.length); }
+    }
+  }, k === 'on' ? 0 : 900);
+}
+
+// ---------- Меню ----------
+
+const TABS = [['deadlines', 'Дедлайны'], ['grades', 'Предметы'], ['gpa', 'GPA'], ['news', 'Новое'], ['more', 'Ещё']];
+let tab = 'deadlines';
+try { tab = localStorage.getItem('tab') || tab; } catch {}
+const mobile = () => window.matchMedia('(max-width: 780px)').matches;
+function renderMenu() {
+  $('menu').innerHTML = TABS.map(([id, name]) => `<button data-go="${id}" class="${tab === id ? 'on' : ''}">${name}</button>`).join('');
+}
+// На телефоне показываем один раздел за раз, на компе — всё сразу, а меню прокручивает к разделу.
+function applyTab() {
+  document.querySelectorAll('[data-sec]').forEach((el) => el.classList.toggle('tab-off', mobile() && el.dataset.sec !== tab));
+  renderMenu();
+}
+$('menu').onclick = (e) => {
+  const b = e.target.closest('[data-go]');
+  if (!b) return;
+  tab = b.dataset.go;
+  try { localStorage.setItem('tab', tab); } catch {}
+  applyTab();
+  if (mobile()) window.scrollTo(0, 0);
+  else {
+    const el = document.querySelector(`[data-sec="${tab}"]`);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
+  }
+};
+window.addEventListener('resize', applyTab);
+
+// ---------- Загрузка ----------
+
+function notice(text, red) {
+  $('notice').hidden = !text;
+  $('notice').textContent = text || '';
+  $('notice').className = 'notice' + (red ? ' red' : '');
+}
+
+// Последние удачные данные храним в браузере: если маркер сломается, страница не опустеет.
+// Ключ привязан к аккаунту, чтобы на общем устройстве не показать чужие данные.
+function cacheKey(uid) { return 'cache:' + (uid || 'local'); }
+function readCache(uid) {
+  try { return JSON.parse(localStorage.getItem(cacheKey(uid))); } catch { return null; }
+}
+function writeCache(body) {
+  try { localStorage.setItem(cacheKey(body.uid), JSON.stringify(body)); } catch {}
+}
+// Понятное объяснение того, что ответил Canvas.
+function whyText(why) {
+  if (/revoked|invalid/i.test(why || '')) return 'Маркера, который сохранён на сайте, в Canvas больше нет: его удалили или пересоздали в настройках Canvas. Вставь сюда тот маркер, который сейчас есть в Canvas, или создай новый — и дальше его не трогай.';
+  if (/expired/i.test(why || '')) return 'У маркера закончился срок действия. При создании нового оставь поле «Срок действия» пустым.';
+  return 'Canvas больше не принимает сохранённый маркер' + (why ? ' (ответ Canvas: ' + why + ')' : '') + '. Нужен новый.';
+}
+
+function show(body, fromCache) {
+  data = body;
+  settings = Object.assign({ skip: {}, exam: {}, goal: {}, manual: {}, credits: {}, final: {}, gpaOff: {} }, body.settings || {});
+  $('setup').hidden = true;
+  $('board').hidden = false;
+  $('menu').hidden = false;
+  $('forget').hidden = demo;
+  $('sub').textContent = (data.name ? data.name + ' · ' : '') + (fromCache ? 'данные от ' : 'обновлено в ') + fmtTime(data.updated);
+  $('moreInfo').textContent = data.name ? 'Ты вошёл как ' + data.name + '. Маркер Canvas хранится в твоём Google-аккаунте.' : '';
+  assignColors();
+  renderHero(); renderItems(); renderCourses(); renderGpa(); renderFeed(); renderNews(); renderTg();
+  applyTab();
+}
+
+let loading = false;
+async function load() {
+  if (loading) return;
+  loading = true;
+  $('refresh').disabled = true;
+  if (data) $('sub').textContent = 'Обновляю…';
+  try {
+    const body = demo ? demoData() : await call('getData');
+    $('loading').hidden = true;
+    if (body.needToken) {
+      const cached = body.badToken && readCache(body.uid);
+      if (cached) {
+        // Маркер сломался, но не выкидываем: показываем последние данные и просим новый маркер прямо сверху.
+        show(cached, true);
+        $('reconnectWhy').textContent = whyText(body.why);
+        $('reconnect').hidden = false;
+        notice('');
+      } else {
+        $('board').hidden = true;
+        $('menu').hidden = true;
+        $('reconnect').hidden = true;
+        $('setup').hidden = false;
+        $('sub').textContent = '';
+        notice(body.badToken ? whyText(body.why) : '', true);
+      }
+      return;
+    }
+    if (body.error) {
+      if (data) $('sub').textContent = (data.name ? data.name + ' · ' : '') + 'данные от ' + fmtTime(data.updated);
+      notice(body.error === 'canvas' ? 'Canvas ответил ошибкой. Показываю прошлые данные — попробуй обновить чуть позже.' : 'Не получилось связаться с Canvas. Проверь интернет.', true);
+      return;
+    }
+    $('reconnect').hidden = true;
+    notice(demo ? 'Это пример с выдуманными данными. Обнови страницу, чтобы вернуться к подключению.' : '');
+    if (!demo) writeCache(body);
+    show(body, false);
+  } catch {
+    $('loading').hidden = true;
+    if (data) $('sub').textContent = (data.name ? data.name + ' · ' : '') + 'данные от ' + fmtTime(data.updated);
+    notice(OFFLINE, true);
+  } finally {
+    loading = false;
+    $('refresh').disabled = false;
+  }
+}
+
+// Запоминаем галочку «скрыть сданное» между открытиями.
+// По умолчанию сданное скрыто — снять галочку можно, выбор запомнится.
+try { $('hideDone').checked = localStorage.getItem('hideDone') !== '0'; } catch {}
+
+$('refresh').onclick = load;
+$('hideDone').onchange = () => {
+  try { localStorage.setItem('hideDone', $('hideDone').checked ? '1' : '0'); } catch {}
+  renderItems();
+};
+$('chips').onclick = (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  filter = chip.dataset.course || null;
+  renderItems();
+};
+// Калькулятор: любое изменение сохраняем в настройки и пересчитываем цифры.
+$('grades').addEventListener('input', (e) => {
+  const box = e.target.closest('.calc');
+  if (!box) return;
+  const id = box.dataset.id, k = e.target.dataset.k, v = e.target.value;
+  if (k === 'goal') settings.goal[id] = v;
+  else if (k === 'examSource') settings.exam[id] = v;
+  else (settings.manual[id] ||= {})[k] = v;
+  saveSettingsSoon();
+  if (k === 'examSource') { renderCourses(); renderItems(); return; } // группа переезжает в «экзамен» — перерисовываем список работ
+  updateCalc(box);
+  renderItems();
+});
+// «не моё» / «вернуть» — и в списке работ предмета, и в дедлайнах.
+function onSkipClick(e) {
+  const btn = e.target.closest('[data-skip]');
+  if (!btn) return;
+  e.preventDefault();
+  toggleSkip(btn.dataset.skip);
+}
+$('grades').addEventListener('click', onSkipClick);
+$('items').addEventListener('click', onSkipClick);
+// Запоминаем, какие предметы раскрыты, чтобы автообновление их не схлопывало.
+$('grades').addEventListener('toggle', (e) => {
+  const d = e.target;
+  if (!d.classList || !d.classList.contains('course')) return;
+  if (d.open) openCourses.add(d.dataset.id); else openCourses.delete(d.dataset.id);
+}, true);
+
+$('demo').onclick = () => { demo = true; load(); };
+async function connect(input, button) {
+  const token = input.value.trim();
+  if (!token) return;
+  button.disabled = true;
+  try {
+    const body = await call('saveToken', token);
+    input.value = '';
+    if (body.ok) await load();
+    else notice(body.badToken ? `Canvas не принял этот маркер${body.why ? ' (ответ Canvas: ' + body.why + ')' : ''}. В нём ${token.length} символов — обычно их 64. Скопируй маркер целиком из окна, которое Canvas показывает сразу после создания.` : 'Не получилось связаться с Canvas. Проверь интернет.', true);
+  } catch {
+    notice(OFFLINE, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+$('save').onclick = () => connect($('token'), $('save'));
+$('save2').onclick = () => connect($('token2'), $('save2'));
+$('token').onkeydown = (e) => { if (e.key === 'Enter') $('save').click(); };
+$('token2').onkeydown = (e) => { if (e.key === 'Enter') $('save2').click(); };
+$('forget').onclick = async () => {
+  if (!confirm('Удалить сохранённый маркер Canvas? Напоминания в Telegram тоже отключатся.')) return;
+  await call('forgetToken');
+  load();
+};
+
+load();
+// Вернулся на страницу (переключил вкладку, открыл с главного экрана телефона) — подтягиваем свежее,
+// если данным больше 2 минут. Иначе можно было видеть старые названия и не видеть новые оценки.
+function refreshIfStale() {
+  if (!$('reconnect').hidden) return; // маркер сломан — ждём новый, а не стучимся в Canvas при каждом возвращении
+  if (!document.hidden && data && !demo && Date.now() - data.updated > 2 * 60 * 1000) load();
+}
+document.addEventListener('visibilitychange', refreshIfStale);
+window.addEventListener('pageshow', refreshIfStale);
+window.addEventListener('focus', refreshIfStale);
+// Автообновление раз в 10 минут — но не пока ты что-то вводишь в калькулятор.
+setInterval(() => {
+  if (document.hidden || !data || demo || (document.activeElement && document.activeElement.tagName === 'INPUT')) return;
+  load();
+}, 10 * 60 * 1000);
+setInterval(() => { if (!document.hidden && data) { renderHero(); renderItems(); } }, 60 * 1000); // отсчёт тикает раз в минуту
+</script>
+</body>
+</html>
