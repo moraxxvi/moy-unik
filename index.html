@@ -220,6 +220,8 @@
   .reconnect a { color: var(--accent); }
   .reconnect input { width: 100%; font: inherit; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin: 4px 0 10px; }
   .morebox { padding: 4px 2px 16px; }
+  .tokenhint:empty { display: none; }
+  .tokenhint code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card2); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
   .tokenbox { width: 100%; font: inherit; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin: 8px 0 10px; }
 
   /* GPA */
@@ -309,6 +311,7 @@
     <h2>Маркер Canvas перестал работать</h2>
     <p id="reconnectWhy"></p>
     <p class="sub">Ниже — данные с последней удачной загрузки. Создай новый маркер в <a href="https://canvas.turan-edu.kz/profile/settings" target="_blank" rel="noopener">настройках Canvas</a> («Новый маркер доступа») и вставь сюда — всё остальное, включая отметки «не моё», сохранится.</p>
+    <p class="sub tokenhint"></p>
     <input id="token2" type="password" placeholder="Новый маркер доступа" autocomplete="off">
     <div class="actions"><button class="primary" id="save2">Подключить</button></div>
   </div>
@@ -322,6 +325,7 @@
       <li>Назначение — любое, например «Мой уник». Срок можно оставить пустым.</li>
       <li>Скопируй длинную строку и вставь сюда.</li>
     </ol>
+    <p class="sub tokenhint"></p>
     <input id="token" type="password" placeholder="Маркер доступа" autocomplete="off">
     <div class="actions">
       <button class="primary" id="save">Подключить</button>
@@ -368,6 +372,7 @@
         <div class="card" data-sec="more">
           <h2>Маркер Canvas</h2>
           <p class="sub">Маркер хранится в твоём Google-аккаунте и общий для компа и телефона: вставил на одном — работает везде. Если пересоздал маркер в Canvas, вставь новый сюда.</p>
+          <p class="sub tokenhint"></p>
           <input id="token3" class="tokenbox" type="password" placeholder="Новый маркер доступа" autocomplete="off">
           <div class="actions"><button id="save3">Заменить маркер</button></div>
         </div>
@@ -1169,6 +1174,23 @@ function whyText(why) {
   return 'Canvas больше не принимает сохранённый маркер' + (why ? ' (ответ Canvas: ' + why + ')' : '') + '. Нужен новый.';
 }
 
+// Показывает, какой маркер сохранён на сайте. Если время вставки раньше, чем маркер создали или пересоздали в Canvas,
+// значит, на сайте старая строка и нужно вставить текущую.
+let tokenHint = null;
+function renderTokenHint() {
+  const h = tokenHint;
+  const when = (ms) => `${fmtDate(ms)}, ${fmtTime(ms)}`;
+  let text = '';
+  if (h && h.start) {
+    text = `На сайте сохранён маркер, который начинается на <code>${esc(h.start)}…</code>${h.saved ? `, вставлен ${esc(when(h.saved))}` : ''}.`;
+    if (h.failed) {
+      text += ` Сайт заметил, что маркер перестал работать ${esc(when(h.failed.at))}${h.lastOk ? ` (последний раз он работал ${esc(when(h.lastOk))})` : ''}. Ответ Canvas: «${esc(h.failed.why || 'без пояснения')}».`;
+    }
+    text += ' Если с тех пор ты пересоздавал или удалял маркер в Canvas — на сайте старый, вставь текущий. Проверить можно в Canvas: у маркера есть «Последний раз использовался», после вставки там появится сегодняшнее время.';
+  }
+  document.querySelectorAll('.tokenhint').forEach((el) => { el.innerHTML = text; });
+}
+
 function show(body, fromCache) {
   data = body;
   settings = Object.assign({ skip: {}, exam: {}, goal: {}, manual: {}, credits: {}, final: {}, gpaOff: {} }, body.settings || {});
@@ -1179,7 +1201,7 @@ function show(body, fromCache) {
   $('sub').textContent = (data.name ? data.name + ' · ' : '') + (fromCache ? 'данные от ' : 'обновлено в ') + fmtTime(data.updated);
   $('moreInfo').textContent = data.name ? 'Ты вошёл как ' + data.name + '. Маркер Canvas хранится в твоём Google-аккаунте.' : '';
   assignColors();
-  renderHero(); renderItems(); renderCourses(); renderGpa(); renderFeed(); renderNews(); renderTg();
+  renderHero(); renderItems(); renderCourses(); renderGpa(); renderFeed(); renderNews(); renderTg(); renderTokenHint();
   applyTab();
 }
 
@@ -1194,6 +1216,7 @@ async function load() {
     const body = demo ? demoData() : await call('getData');
     $('loading').hidden = true;
     if (body.needToken) {
+      if (body.tokenHint) tokenHint = body.tokenHint;
       const cached = body.badToken && readCache(body.uid);
       if (cached) {
         // Маркер сломался, но не выкидываем: показываем последние данные и просим новый маркер прямо сверху.
@@ -1207,6 +1230,7 @@ async function load() {
         $('reconnect').hidden = true;
         $('setup').hidden = false;
         $('sub').textContent = '';
+        renderTokenHint();
         notice(body.badToken ? whyText(body.why) : '', true);
       }
       return;
@@ -1219,6 +1243,7 @@ async function load() {
     $('reconnect').hidden = true;
     notice(demo ? 'Это пример с выдуманными данными. Обнови страницу, чтобы вернуться к подключению.' : '');
     if (!demo) writeCache(body);
+    if (body.tokenHint) tokenHint = body.tokenHint;
     show(body, false);
   } catch (err) {
     $('loading').hidden = true;

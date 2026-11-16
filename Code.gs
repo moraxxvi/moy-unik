@@ -263,6 +263,33 @@ function uid_() {
   return id;
 }
 
+// Какой маркер сейчас сохранён: только первые 5 символов и время, когда его вставили.
+// Нужно, чтобы сравнить с «Сведениями» в Canvas и сразу увидеть, что на сайте старый маркер.
+function tokenHint_(token) {
+  const p = props_();
+  let failed = null;
+  try { failed = JSON.parse(p.getProperty('TOKEN_FAILED') || 'null'); } catch (e) {}
+  return {
+    start: String(token).slice(0, 5),
+    saved: Number(p.getProperty('TOKEN_SAVED')) || null,   // когда вставили
+    lastOk: Number(p.getProperty('TOKEN_OK')) || null,     // когда сайт последний раз видел его рабочим
+    failed: failed,                                         // когда заметил, что перестал, и что ответил Canvas
+  };
+}
+
+// Журнал жизни маркера: нужен, чтобы по фактам понять, сколько он живёт и почему перестаёт работать.
+function noteTokenOk_() {
+  const p = props_();
+  const last = Number(p.getProperty('TOKEN_OK')) || 0;
+  if (Date.now() - last > 5 * 60 * 1000) p.setProperty('TOKEN_OK', String(Date.now())); // не чаще раза в 5 минут
+  if (p.getProperty('TOKEN_FAILED')) p.deleteProperty('TOKEN_FAILED');                   // снова работает
+}
+
+function noteTokenFailed_(why) {
+  const p = props_();
+  if (!p.getProperty('TOKEN_FAILED')) p.setProperty('TOKEN_FAILED', JSON.stringify({ at: Date.now(), why: String(why || '') }));
+}
+
 function getData() {
   const token = props_().getProperty('CANVAS_TOKEN');
   if (!token) return { needToken: true, uid: uid_() };
@@ -271,10 +298,14 @@ function getData() {
     data.telegram = tgStatus();
     data.settings = readSettings_();
     data.uid = uid_();
+    noteTokenOk_();
+    data.tokenHint = tokenHint_(token);
     return data;
   } catch (err) {
     const res = fail_(err);
     res.uid = uid_();
+    if (res.badToken) noteTokenFailed_(res.why);
+    res.tokenHint = tokenHint_(token);
     return res;
   }
 }
@@ -307,12 +338,18 @@ function saveToken(token) {
     return fail_(err);
   }
   props_().setProperty('CANVAS_TOKEN', token);
+  props_().setProperty('TOKEN_SAVED', String(Date.now()));
+  props_().setProperty('TOKEN_OK', String(Date.now())); // только что проверили — рабочий
+  props_().deleteProperty('TOKEN_FAILED');
   return { ok: true };
 }
 
 function forgetToken() {
   tgDisconnect();
   props_().deleteProperty('CANVAS_TOKEN');
+  props_().deleteProperty('TOKEN_SAVED');
+  props_().deleteProperty('TOKEN_OK');
+  props_().deleteProperty('TOKEN_FAILED');
   return { ok: true };
 }
 
