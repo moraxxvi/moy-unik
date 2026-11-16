@@ -278,14 +278,20 @@ function tokenHint_(token) {
 }
 
 // Журнал жизни маркера: нужен, чтобы по фактам понять, сколько он живёт и почему перестаёт работать.
-function noteTokenOk_() {
+function sameToken_(token) {
+  return props_().getProperty('CANVAS_TOKEN') === token;
+}
+
+function noteTokenOk_(token) {
+  if (!sameToken_(token)) return; // пока шла загрузка, маркер уже заменили
   const p = props_();
   const last = Number(p.getProperty('TOKEN_OK')) || 0;
   if (Date.now() - last > 5 * 60 * 1000) p.setProperty('TOKEN_OK', String(Date.now())); // не чаще раза в 5 минут
   if (p.getProperty('TOKEN_FAILED')) p.deleteProperty('TOKEN_FAILED');                   // снова работает
 }
 
-function noteTokenFailed_(why) {
+function noteTokenFailed_(token, why) {
+  if (!sameToken_(token)) return; // отказ старого маркера, а новый уже сохранён — это не поломка
   const p = props_();
   if (!p.getProperty('TOKEN_FAILED')) p.setProperty('TOKEN_FAILED', JSON.stringify({ at: Date.now(), why: String(why || '') }));
 }
@@ -298,13 +304,15 @@ function getData() {
     data.telegram = tgStatus();
     data.settings = readSettings_();
     data.uid = uid_();
-    noteTokenOk_();
+    noteTokenOk_(token);
     data.tokenHint = tokenHint_(token);
     return data;
   } catch (err) {
     const res = fail_(err);
+    // Пока шёл запрос, маркер могли заменить: тогда отказ относится к старому маркеру — просто повторяем с новым.
+    if (res.badToken && !sameToken_(token)) return getData();
     res.uid = uid_();
-    if (res.badToken) noteTokenFailed_(res.why);
+    if (res.badToken) noteTokenFailed_(token, res.why);
     res.tokenHint = tokenHint_(token);
     return res;
   }

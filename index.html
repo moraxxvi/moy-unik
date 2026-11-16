@@ -221,6 +221,14 @@
   .reconnect input { width: 100%; font: inherit; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin: 4px 0 10px; }
   .morebox { padding: 4px 2px 16px; }
   .tokenhint:empty { display: none; }
+  code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card2); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+  .aboutbody { font-size: 14px; }
+  .aboutbody h3 { font-size: 13px; font-weight: 600; margin: 18px 0 4px; }
+  .aboutbody p { margin: 4px 0 8px; }
+  .aboutbody ul, .aboutbody ol { margin: 4px 0 8px; padding-left: 20px; }
+  .aboutbody li { margin-bottom: 4px; }
+  .aboutbody a { color: var(--accent); }
+  details.about > summary { color: var(--accent); }
   .tokenhint code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card2); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
   .tokenbox { width: 100%; font: inherit; padding: 9px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin: 8px 0 10px; }
 
@@ -333,6 +341,7 @@
     </div>
     <p class="sub"><b>Важно:</b> после подключения не удаляй и не пересоздавай этот маркер в Canvas — сайт хранит именно его, и он сразу перестанет работать. Один маркер подходит и для компа, и для телефона.</p>
     <p class="sub">Маркер сохраняется только у тебя. Никому его не показывай: он даёт доступ к твоему Canvas.</p>
+    <details class="about"><summary>Как это работает и безопасность</summary><div class="aboutbody"></div></details>
   </div>
 
   <div id="board" hidden>
@@ -375,6 +384,10 @@
           <p class="sub tokenhint"></p>
           <input id="token3" class="tokenbox" type="password" placeholder="Новый маркер доступа" autocomplete="off">
           <div class="actions"><button id="save3">Заменить маркер</button></div>
+        </div>
+        <div class="card" data-sec="more">
+          <h2>Как это работает и безопасность</h2>
+          <details class="about"><summary>Что читает страница, где хранится маркер, как отозвать доступ</summary><div class="aboutbody"></div></details>
         </div>
         <div data-sec="more" class="morebox">
           <p class="sub" id="moreInfo"></p>
@@ -1149,6 +1162,51 @@ $('menu').onclick = (e) => {
   }
 };
 window.addEventListener('resize', applyTab);
+
+// ---------- Как это работает и безопасность ----------
+// Тот же текст лежит в docs/how-it-works.md — при правках меняем оба.
+const ABOUT_HTML = `
+<h3>Что это</h3>
+<p>Страница показывает данные студента из Canvas: дедлайны, оценки, объявления. Работает на Google Apps Script, доступна только с учебной почтой <code>@turan-edu.kz</code> и запускается от имени того, кто её открыл.</p>
+<h3>Что страница читает из Canvas</h3>
+<p>Только запросы на чтение (GET), и только про курсы и работы самого студента.</p>
+<ul>
+  <li><b>Имя</b> — <code>/users/self</code></li>
+  <li><b>Курсы, итоговый процент, преподаватели, программа</b> — <code>/courses</code></li>
+  <li><b>Ближайшие дедлайны</b> — <code>/planner/items</code></li>
+  <li><b>Лента событий</b> — <code>/users/self/activity_stream</code></li>
+  <li><b>Работы, оценки и отзывы преподавателей</b> — <code>/courses/…/students/submissions</code> (только свои)</li>
+  <li><b>Группы заданий и тесты</b> — <code>/courses/…/assignment_groups</code>, <code>/courses/…/quizzes</code></li>
+  <li><b>Объявления</b> — <code>/announcements</code></li>
+</ul>
+<p>Около 25 запросов на одно обновление (при 7 курсах). Страница обновляется при открытии, при возврате к ней (если данным больше 2 минут) и раз в 10 минут, пока открыта.</p>
+<h3>Чего страница не делает</h3>
+<ul>
+  <li>Не отправляет работы, не пишет сообщения, ничего не меняет и не удаляет в Canvas: в коде нет ни одного запроса на запись к Canvas.</li>
+  <li>Не просит пароль от Canvas или Google.</li>
+  <li>Не читает данные других студентов и не собирает статистику: в коде нет аналитики и трекеров.</li>
+</ul>
+<h3>Где хранятся маркер и данные</h3>
+<ul>
+  <li><b>Маркер Canvas и настройки</b> (отметки «не моё», кредиты, цели) — в личных свойствах скрипта Google-аккаунта самого студента. У автора нет ни своего сервера, ни базы пользователей.</li>
+  <li><b>В браузере</b> лежит последняя загруженная копия данных (чтобы страница не пустела, если маркер перестал работать), выбранный раздел и галочка «скрыть сданное». Стирается очисткой данных сайта.</li>
+  <li><b>Шрифт</b> Inter загружается с Google Fonts, больше ничего внешнего нет.</li>
+  <li><b>Telegram</b> — по желанию и по умолчанию выключен. Если подключить своего бота, названия заданий и оценки уходят в него. Без подключения в Telegram ничего не отправляется.</li>
+</ul>
+<h3>Ограничения, о которых стоит знать</h3>
+<ul>
+  <li><b>Маркер мощнее, чем нужно странице.</b> Созданный вручную маркер даёт те же права, что у тебя, а Canvas не позволяет ограничить его «только чтением». Страница использует его только для чтения, но передавать маркер нельзя никому.</li>
+  <li><b>Нужно доверять автору.</b> Код запускается от твоего имени, а проект принадлежит автору, поэтому технически он может изменить код. Поэтому код открыт: <a href="https://github.com/moraxxvi/moy-unik" target="_blank" rel="noopener">github.com/moraxxvi/moy-unik</a>.</li>
+</ul>
+<h3>Как отозвать доступ</h3>
+<ol>
+  <li>Здесь: «Ещё» → «Отключить Canvas на этом аккаунте» — маркер удаляется из аккаунта Google.</li>
+  <li>В Canvas: Аккаунт → Настройки → «Утвержденные интеграции» → корзина рядом с маркером. Сайт маркер в Canvas не удаляет, это нужно сделать самому.</li>
+  <li>По желанию: в настройках аккаунта Google (Безопасность → сторонние приложения) убрать доступ скрипта.</li>
+</ol>
+<h3>Как станет лучше</h3>
+<p>Маркеры — временное решение. Правильный вариант — ключ разработчика (Developer Key) и вход через OAuth2: студент входит на странице Canvas, пароль и маркеры не нужны, права ограничены чтением, а администраторы могут отозвать доступ централизованно.</p>`;
+document.querySelectorAll('.aboutbody').forEach((el) => { el.innerHTML = ABOUT_HTML; });
 
 // ---------- Загрузка ----------
 
